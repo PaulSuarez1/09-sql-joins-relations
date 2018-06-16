@@ -49,19 +49,18 @@ app.get('/articles', (request, response) => {
 });
 
 app.post('/articles', (request, response) => {
-  // TODO: Write a SQL query to insert a new author, ON CONFLICT DO NOTHING.
-  // TODO: In the provided array, add the author and author_url as data for the SQL query.
+  // DONE: Write a SQL query to insert a new author, ON CONFLICT DO NOTHING.
+  // DONE: In the provided array, add the author and author_url as data for the SQL query.
   let SQL = `
-    INSERT INTO authors(author, author_url)
-    VALUES ($1, $2)
-    ON CONFLICT DO NOTHING;
+  INSERT INTO authors(author, author_url)
+  VALUES($1, $2)
+  ON CONFLICT DO NOTHING;
   `;
 
   let values = [
     request.body.author,
     request.body.author_url
   ];
-
   client.query(SQL, values,
     function(err) {
       if (err) console.error(err);
@@ -70,38 +69,41 @@ app.post('/articles', (request, response) => {
     }
   )
 
-  function queryTwo() { //query for authors
-    // TODO: Write a SQL query to retrieve the author_id from the authors table for the new article.
-    // TODO: In the provided array, add the author name as data for the SQL query.
+  function queryTwo() {
+    // DONE: Write a SQL query to retrieve the author_id from the authors table for the new article.
+    // DONE: In the provided array, add the author name as data for the SQL query.
     let SQL = `
-    SELECT author_id FROM authors
-    WHERE author = $1;
+    SELECT author_id
+    FROM authors
+    WHERE author=$1;
     `;
-    let values = [request.body.author];
-    
+
+    let values = [
+      request.body.author
+    ];
+
     client.query(SQL, values,
       function(err, result) {
         if (err) console.error(err);
-
         // REVIEW: This is our third query, to be executed when the second is complete. We are also passing the author_id into our third query.
         queryThree(result.rows[0].author_id);
       }
     )
   }
 
-  function queryThree(author_id) { // query for articles("other stuff" and add also pass the author_id value)
-    // TODO: Write a SQL query to insert the new article using the author_id from our previous query.
-    // TODO: In the provided array, add the data from our new article, including the author_id, as data for the SQL query.
+  function queryThree(author_id) {
+    // DONE: Write a SQL query to insert the new article using the author_id from our previous query.
+    // DONE: In the provided array, add the data from our new article, including the author_id, as data for the SQL query.
     let SQL = `
     INSERT INTO articles(author_id, title, category, published_on, body)
-    VALUES ($1, $2, $3, $4, $5); 
+    VALUES ($1, $2, $3, $4, $5);
     `;
     let values = [
-      author_id, 
-      request.body.title, 
-      request.body.category, 
-      request.body.published_on, 
-      request.body.body 
+      author_id,
+      request.body.title,
+      request.body.category,
+      request.body.published_on,
+      request.body.body
     ];
     client.query(SQL, values,
       function(err) {
@@ -113,17 +115,38 @@ app.post('/articles', (request, response) => {
 });
 
 app.put('/articles/:id', function(request, response) {
-  // TODO: Write a SQL query to update an author record. Remember that our articles now have an author_id property, so we can reference it from the request.body.
-  // TODO: In the provided array, add the required values from the request as data for the SQL query to interpolate.
+  // DONE: Write a SQL query to update an author record. Remember that our articles now have an author_id property, so we can reference it from the request.body.
+  // TODO DONE: In the provided array, add the required values from the request as data for the SQL query to interpolate.
 
-  let SQL = '';
-  let values = [];
+  let SQL = `
+  UPDATE authors
+  SET author=$1, author_url=$2
+  WHERE author_id=$3;
+  `;
+
+  let values = [
+    request.body.author,
+    request.body.author_url,
+    request.body.author_id
+  ];
+
   client.query(SQL, values)
     .then(() => {
-      // TODO: Write a SQL query to update an article record. Keep in mind that article records now have an author_id, in addition to title, category, published_on, and body.
-      // TODO: In the provided array, add the required values from the request as data for the SQL query to interpolate.
-      let SQL = '';
-      let values = [];
+      // DONE: Write a SQL query to update an article record. Keep in mind that article records now have an author_id, in addition to title, category, published_on, and body.
+      // DONE: In the provided array, add the required values from the request as data for the SQL query to interpolate.
+      let SQL = `
+      UPDATE articles
+      SET author_id=$1, title=$2, category=$3, published_on=$4, body=$5
+      WHERE article_id=$6;
+      `;
+      let values = [
+        request.body.author_id,
+        request.body.title,
+        request.body.category,
+        request.body.published_on,
+        request.body.body,
+        request.params.id
+      ];
       client.query(SQL, values)
     })
     .then(() => {
@@ -134,6 +157,8 @@ app.put('/articles/:id', function(request, response) {
     })
 });
 
+
+// delete specific
 app.delete('/articles/:id', (request, response) => {
   let SQL = `DELETE FROM articles WHERE article_id=$1;`;
   let values = [request.params.id];
@@ -146,8 +171,10 @@ app.delete('/articles/:id', (request, response) => {
     });
 });
 
+
+// delete all
 app.delete('/articles', (request, response) => {
-  let SQL = 'DELETE FROM articles';
+  let SQL = `DELETE FROM articles`;
   client.query(SQL)
     .then(() => {
       response.send('Delete complete');
@@ -156,6 +183,9 @@ app.delete('/articles', (request, response) => {
       console.error(err)
     });
 });
+
+
+
 
 // REVIEW: This calls the loadDB() function, defined below.
 loadDB();
@@ -172,7 +202,7 @@ app.listen(PORT, () => {
 function loadAuthors() {
   fs.readFile('./public/data/hackerIpsum.json', 'utf8', (err, fd) => {
     JSON.parse(fd).forEach(ele => {
-      let SQL = 'INSERT INTO authors(author, author_url) VALUES($1, $2) ON CONFLICT DO NOTHING';
+      let SQL = `INSERT INTO authors(author, author_url) VALUES($1, $2) ON CONFLICT DO NOTHING`;
       let values = [ele.author, ele.author_url];
       client.query(SQL, values);
     })
@@ -181,7 +211,7 @@ function loadAuthors() {
 
 // REVIEW: This helper function will load articles into the DB if the DB is empty.
 function loadArticles() {
-  let SQL = 'SELECT COUNT(*) FROM articles';
+  let SQL = `SELECT COUNT(*) FROM articles`;
   client.query(SQL)
     .then(result => {
       if (!parseInt(result.rows[0].count)) {
