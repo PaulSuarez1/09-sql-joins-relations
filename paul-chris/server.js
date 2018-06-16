@@ -7,7 +7,10 @@ const PORT = process.env.PORT || 3000;
 const app = express();
 
 // DONE: Don't forget to set your own conString
-const conString = 'postgres://localhost:5432/kilovolt';
+// conString for Chris' machine 
+const conString = 'postgres://postgres:123@localhost:5432/kilovolt'; 
+// constString for Paul's machine: 
+// const conString = 'postgres://localhost:5432/kilovolt';
 
 const client = new pg.Client(conString);
 client.connect();
@@ -50,12 +53,13 @@ app.post('/articles', (request, response) => {
   // TODO: In the provided array, add the author and author_url as data for the SQL query.
   let SQL = `
     INSERT INTO authors(author, author_url)
-    VALUES ($1, $2);
+    VALUES ($1, $2)
+    ON CONFLICT DO NOTHING;
   `;
 
   let values = [
     request.body.author,
-    request.body.authorUrl
+    request.body.author_url
   ];
 
   client.query(SQL, values,
@@ -73,18 +77,7 @@ app.post('/articles', (request, response) => {
     SELECT author_id FROM authors
     WHERE author = $1;
     `;
-    let values = [
-
-      request.body.author
-
-        //
-        // ************* WE ARE HERE!!!!!!!!!!!!!!!
-        //
-    ];
-
-
-
-
+    let values = [request.body.author];
     
     client.query(SQL, values,
       function(err, result) {
@@ -99,8 +92,17 @@ app.post('/articles', (request, response) => {
   function queryThree(author_id) { // query for articles("other stuff" and add also pass the author_id value)
     // TODO: Write a SQL query to insert the new article using the author_id from our previous query.
     // TODO: In the provided array, add the data from our new article, including the author_id, as data for the SQL query.
-    let SQL = '';
-    let values = [];
+    let SQL = `
+    INSERT INTO articles(author_id, title, category, published_on, body)
+    VALUES ($1, $2, $3, $4, $5); 
+    `;
+    let values = [
+      author_id, 
+      request.body.title, 
+      request.body.category, 
+      request.body.published_on, 
+      request.body.body 
+    ];
     client.query(SQL, values,
       function(err) {
         if (err) console.error(err);
