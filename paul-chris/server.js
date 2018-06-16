@@ -8,9 +8,9 @@ const app = express();
 
 // DONE: Don't forget to set your own conString
 // conString for Chris' machine 
-const conString = 'postgres://postgres:123@localhost:5432/kilovolt'; 
+// const conString = 'postgres://postgres:123@localhost:5432/kilovolt'; 
 // constString for Paul's machine: 
-// const conString = 'postgres://localhost:5432/kilovolt';
+const conString = 'postgres://localhost:5432/kilovolt';
 
 const client = new pg.Client(conString);
 client.connect();
